@@ -1,1 +1,4 @@
 .DS_Store
+echo "node_modules/" >> .gitignore
+echo "package-lock.json" >> .gitignore
+
