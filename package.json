@@ -1,0 +1,41 @@
+{
+  "name": "cootoh",
+  "version": "1.0.0",
+  "description": "Uber for Chefs - Delivered on Demand to homes",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "jest",
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/urbantech/cootoh.git"
+  },
+  "keywords": [
+    "Foodie",
+    "Private",
+    "Chef",
+    "Meal",
+    "Delivery"
+  ],
+  "author": "Toby Morning",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "express": "^4.17.1",
+    "mongoose": "^5.13.22"
+  },
+  "devDependencies": {
+    "chai": "^5.1.1",
+    "jest": "^26.6.3",
+    "nodemon": "^2.0.7",
+    "supertest": "^6.3.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/src/tests/**/*.[jt]s?(x)"
+    ]
+  }
+}
