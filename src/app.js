@@ -1,7 +1,9 @@
 // src/app.js
+
 const express = require('express');
-const connectToDatabase = require('./db'); // Import the database connection function
+const mongoose = require('mongoose');
 const userRoutes = require('./routes/userRoutes');
+const connectToDatabase = require('./db'); // Assuming db connection logic is in db.js
 
 const app = express();
 
@@ -11,7 +13,7 @@ app.use(express.json());
 // Routes
 app.use('/api/users', userRoutes);
 
-// Connect to MongoDB
-connectToDatabase('mongodb://localhost:27017/cootoh');
+// Connect to database
+connectToDatabase();
 
 module.exports = app;
