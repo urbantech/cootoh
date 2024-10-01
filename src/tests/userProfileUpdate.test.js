@@ -1,4 +1,3 @@
-// src/tests/userProfileUpdate.test.js
 const mongoose = require('mongoose');
 const request = require('supertest');
 const app = require('../app');
@@ -7,10 +6,29 @@ const User = require('../models/user');
 describe('PUT /api/users/:id', () => {
   let user;
 
+  beforeAll(async () => {
+    // Connect to the test database
+    await mongoose.connect('mongodb://localhost:27017/cootoh-test', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+  });
+
   beforeEach(async () => {
-    await mongoose.connection.db.dropDatabase();
-    user = new User({ email: 'test@example.com', password: 'password123', first_name: 'John', last_name: 'Doe', phone_number: '1234567890' });
+    await mongoose.connection.db.dropDatabase(); // Clear the database before each test
+    user = new User({
+      email: 'test@example.com',
+      password: 'password123',
+      first_name: 'John',
+      last_name: 'Doe',
+      phone_number: '1234567890'
+    });
     await user.save();
+  });
+
+  afterAll(async () => {
+    // Close the database connection after all tests are done
+    await mongoose.connection.close();
   });
 
   it('should return 200 and update user profile', async () => {
@@ -42,8 +60,8 @@ describe('PUT /api/users/:id', () => {
     expect(response.status).toBe(404);
     expect(response.body).toHaveProperty('message', 'User not found');
   });
-
-  afterAll(async () => {
-    await mongoose.connection.close(); // Close DB connection after tests
-  });
 });
+afterAll(async () => {
+    await mongoose.connection.close(); // Close the MongoDB connection after tests
+  });
+  
