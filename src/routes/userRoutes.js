@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerUser, getUserById, deleteUser, updateUserById } = require('../controllers/userController'); // Ensure all functions are correctly imported
+const { registerUser, getUserById, updateUserProfile, deleteUser } = require('../controllers/userController');
 const router = express.Router();
 
 // User registration route
@@ -8,10 +8,10 @@ router.post('/register', registerUser);
 // Get user by ID route
 router.get('/:id', getUserById);
 
-// Delete user by ID route
-router.delete('/:id', deleteUser); // Fixing the reference to deleteUser function
+// Update user profile route
+router.put('/:id', updateUserProfile);
 
-// Update user by ID route
-router.put('/:id', updateUserById); // Adding updateUserById route
+// Delete user by ID route
+router.delete('/:id', deleteUser);
 
 module.exports = router;
