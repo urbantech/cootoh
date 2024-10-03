@@ -1,13 +1,31 @@
-// src/routes/userRoutes.js
 const express = require('express');
-const { registerUser, getUserById, updateUserProfile, deleteUser, verifyUser } = require('../controllers/userController');
+const {
+  registerUser,
+  loginUser,
+  verifyUser,
+  getUserById,
+  updateUserProfile,
+  deleteUser,
+} = require('../controllers/userController');
 
 const router = express.Router();
 
+// User registration
 router.post('/register', registerUser);
-router.get('/:id', getUserById);
-router.put('/:id', updateUserProfile);
-router.delete('/:id', deleteUser);
+
+// User login
+router.post('/login', loginUser);
+
+// User verification
 router.post('/verify', verifyUser);
+
+// Get user by ID
+router.get('/:id', getUserById);
+
+// Update user profile
+router.put('/:id', updateUserProfile);
+
+// Delete user
+router.delete('/:id', deleteUser);
 
 module.exports = router;
