@@ -1,7 +1,7 @@
 // src/routes/authRoutes.js
 
 const express = require('express');
-const { loginUser, requestPasswordReset, resetPassword } = require('../controllers/authController');
+const { loginUser, requestPasswordReset, resetPassword } = require('../controllers/authController'); // Correct import
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ const router = express.Router();
 router.post('/login', loginUser);
 
 // Password reset request route
-router.post('/reset-password-request', requestPasswordReset);
+router.post('/forgot-password', requestPasswordReset);
 
 // Reset password route
 router.post('/reset-password', resetPassword);

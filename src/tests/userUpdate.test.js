@@ -50,3 +50,7 @@ describe('PUT /api/users/:id', () => {
         expect(response.body).toHaveProperty('message', 'User not found');
     });
 });
+afterAll(async () => {
+    await mongoose.connection.close(); // Close the MongoDB connection after tests
+  });
+  
