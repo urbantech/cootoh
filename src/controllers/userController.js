@@ -1,5 +1,3 @@
-// src/controllers/userController.js
-
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
@@ -9,10 +7,10 @@ require('dotenv').config();
 // Register user function
 exports.registerUser = async (req, res) => {
   try {
-    const { email, password, first_name, last_name, phoneNumber } = req.body;
+    const { email, password, firstName, lastName, phoneNumber } = req.body;
 
     // Validate input
-    if (!email || !password || !first_name || !last_name || !phoneNumber) {
+    if (!email || !password || !firstName || !lastName || !phoneNumber) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -23,26 +21,16 @@ exports.registerUser = async (req, res) => {
     }
 
     // Create new user
-    const user = new User({
-      email,
-      password,
-      first_name,
-      last_name,
-      phoneNumber,
-    });
-
+    const user = new User({ email, password, firstName, lastName, phoneNumber });
     await user.save();
 
-    // TODO: Implement OTP generation and sending
-
+    console.log('New user registered:', user.email);
     res.status(201).json({ message: 'User registered successfully, please verify your email.' });
   } catch (error) {
     console.error('Error during user registration:', error);
-
     if (error.name === 'ValidationError') {
       return res.status(400).json({ message: error.message });
     }
-
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -52,22 +40,22 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input fields
+    // Validate input
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
     // Find the user by email
     const user = await User.findOne({ email });
-
-    // Check if user exists and is verified
-    if (!user || user.verification_status !== 'verified') {
+    if (!user || user.verificationStatus !== 'verified') {
+      console.log('Invalid login attempt for:', email);
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
     // Compare passwords
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      console.log('Invalid password attempt for:', email);
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
@@ -75,7 +63,7 @@ exports.loginUser = async (req, res) => {
     const payload = { userId: user._id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    // Respond with the token
+    console.log('User logged in:', email);
     res.status(200).json({ token });
   } catch (error) {
     console.error('Error during user login:', error);
@@ -86,33 +74,38 @@ exports.loginUser = async (req, res) => {
 // Verify user function
 exports.verifyUser = async (req, res) => {
   try {
-    const { user_id, otp } = req.body;
+    const { userId, otp } = req.body;
 
-    // Ensure user_id is a valid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(user_id)) {
+    console.log('Verifying user:', userId);
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.log('Invalid user ID format:', userId);
       return res.status(400).json({ message: 'Invalid user ID' });
     }
 
     // Find the user by ID
-    const user = await User.findById(user_id);
+    const user = await User.findById(userId);
     if (!user) {
+      console.log('User not found for verification:', userId);
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Ensure OTPs are compared as strings
+    // Validate OTP (add expiration logic if applicable)
     if (String(user.otp) !== String(otp)) {
+      console.log('Invalid OTP for user:', userId);
       return res.status(400).json({ message: 'Invalid OTP' });
     }
 
     // Mark user as verified
-    user.verification_status = 'verified';
+    user.verificationStatus = 'verified';
     await user.save();
 
-    // Respond with success
-    return res.status(200).json({ verification_status: 'verified' });
+    console.log('User verified successfully:', userId);
+    res.status(200).json({ verificationStatus: 'verified' });
   } catch (error) {
     console.error('Error during user verification:', error);
-    return res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -121,14 +114,16 @@ exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Ensure id is a valid ObjectId
+    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('Invalid user ID format:', id);
       return res.status(400).json({ message: 'Invalid user ID' });
     }
 
     // Find the user by ID
-    const user = await User.findById(id).select('-password -otp'); // Exclude sensitive fields
+    const user = await User.findById(id).select('-password -otp');
     if (!user) {
+      console.log('User not found:', id);
       return res.status(404).json({ message: 'User not found' });
     }
 
@@ -153,10 +148,10 @@ exports.updateUserProfile = async (req, res) => {
     // Prevent updating sensitive fields
     delete updates.password;
     delete updates.otp;
-    delete updates.verification_status;
+    delete updates.verificationStatus;
 
-    // **Add validation for required fields**
-    const requiredFields = ['first_name', 'last_name', 'phoneNumber'];
+    // Validate required fields
+    const requiredFields = ['firstName', 'lastName', 'phoneNumber'];
     const missingFields = requiredFields.filter((field) => !updates[field]);
 
     if (missingFields.length > 0) {
@@ -169,21 +164,20 @@ exports.updateUserProfile = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(id, updates, {
       new: true,
       runValidators: true,
-      context: 'query', // Necessary for validation in update operations
+      context: 'query',
     }).select('-password -otp');
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    console.log('User updated successfully:', id);
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error('Error updating user profile:', error);
-
     if (error.name === 'ValidationError') {
       return res.status(400).json({ message: error.message });
     }
-
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -193,7 +187,7 @@ exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Ensure id is a valid ObjectId
+    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
@@ -204,6 +198,7 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    console.log('User deleted:', id);
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Error deleting user:', error);
