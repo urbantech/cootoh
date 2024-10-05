@@ -2,7 +2,7 @@ const express = require('express');
 const {
   registerUser,
   loginUser,
-  verifyUser,
+  verifyUser, // You are already importing verifyUser here
   getUserById,
   updateUserProfile,
   deleteUser,
@@ -17,7 +17,7 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 
 // User verification
-router.post('/verify', verifyUser);
+router.post('/verify', verifyUser); // This is the correct route for verification
 
 // Get user by ID
 router.get('/:id', getUserById);
