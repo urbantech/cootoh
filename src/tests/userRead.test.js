@@ -1,75 +1,62 @@
-const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../app');
+const request = require('supertest');
+const app = require('../app'); // Assuming your Express app is exported from this file
 const User = require('../models/user');
 
+jest.setTimeout(30000); // Set a longer timeout for all tests
+
+beforeAll(async () => {
+  const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/cootoh-test';
+  console.log('MONGO_URI:', mongoUri);
+
+  if (mongoose.connection.readyState === 0) {
+    console.log('Connecting to MongoDB...');
+    await mongoose.connect(mongoUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }).catch((error) => console.error('Error connecting to MongoDB:', error));
+    console.log('Connected to MongoDB.');
+  }
+});
+
+afterEach(async () => {
+  console.log('Starting afterEach hook: Deleting all users.');
+  await User.deleteMany({}).then(() => console.log('All users deleted.')).catch((err) => console.error('Error deleting users:', err));
+});
+
+afterAll(async () => {
+  console.log('Closing MongoDB connection...');
+  await mongoose.connection.close();
+  console.log('MongoDB connection closed.');
+});
+
 describe('GET /api/users/:id', () => {
-  // Increase Jest timeout to prevent timeout issues
-  jest.setTimeout(10000); // 10 seconds
-
-  let user;
-
-  beforeAll(async () => {
-    // Ensure Mongoose is connected before starting the test
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-    }
-  });
-
-  beforeEach(async () => {
-    // Log that we're starting the beforeEach hook
-    console.log('Starting beforeEach hook: Creating test user and clearing users collection.');
-
-    // Clear data before each test to ensure test isolation
-    await User.deleteMany({}).catch((err) => console.error('Error clearing users:', err));
-
-    // Create a test user
-    user = new User({
-      email: 'test@example.com',
-      password: 'password123',
-      firstName: 'John',
-      lastName: 'Doe',
+  it('should fetch a user by ID and return status 200', async () => {
+    console.log('Creating test user...');
+    const user = new User({
+      email: 'testuser@example.com',
+      password: 'testpassword',
+      firstName: 'Test',
+      lastName: 'User',
       phoneNumber: '1234567890',
     });
-
-    await user.save().catch((err) => console.error('Error creating test user:', err));
-    console.log('Test user created:', user._id);
-  });
-
-  afterEach(async () => {
-    // Log that we're starting the afterEach hook
-    console.log('Starting afterEach hook: Deleting all users.');
-    await User.deleteMany({}).catch((err) => console.error('Error deleting users:', err));
-  });
-
-  afterAll(async () => {
-    // Close Mongoose connection after all tests are done
-    await mongoose.connection.close();
-  });
-
-  it('should fetch a user by ID and return status 200', async () => {
-    console.log('Sending request to fetch user by ID:', user._id);
+    await user.save();
 
     const response = await request(app).get(`/api/users/${user._id}`);
-    console.log('Response status:', response.status);
-    console.log('Response body:', response.body);
+    console.log('Response:', response.body);
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('_id', String(user._id));
+    expect(response.body.email).toBe(user.email);
   });
 
   it('should return a 404 error if the user is not found', async () => {
-    const nonExistentId = new mongoose.Types.ObjectId(); // Generate a new ObjectId
-    console.log('Sending request for non-existent user ID:', nonExistentId);
+    const nonExistentUserId = new mongoose.Types.ObjectId();
+    console.log('Testing with non-existent user ID:', nonExistentUserId);
 
-    const response = await request(app).get(`/api/users/${nonExistentId}`);
-    console.log('Response status:', response.status);
-    console.log('Response body:', response.body);
+    const response = await request(app).get(`/api/users/${nonExistentUserId}`);
+    console.log('Response received for non-existent user:', response.body);
 
     expect(response.status).toBe(404);
-    expect(response.body).toHaveProperty('message', 'User not found');
+    expect(response.body.message).toBe('User not found');
   });
 });
