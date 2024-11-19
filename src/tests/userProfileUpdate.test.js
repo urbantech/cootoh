@@ -1,9 +1,7 @@
-// src/tests/userProfileUpdate.test.js
-
 const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../app');
-const User = require('../models/user');
+const User = require('../models/user'); // Update the path for the User model
 
 // Increase Jest timeout for longer-running tests
 jest.setTimeout(30000); // 30 seconds
